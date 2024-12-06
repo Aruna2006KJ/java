@@ -1,0 +1,174 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+class Flight {
+    String flightNumber;
+    String origin;
+    String destination;
+    int availableSeats;
+
+    public Flight(String flightNumber, String origin, String destination, int availableSeats) {
+        this.flightNumber = flightNumber;
+        this.origin = origin;
+        this.destination = destination;
+        this.availableSeats = availableSeats;
+    }
+
+    public boolean bookSeat() {
+        if (availableSeats > 0) {
+            availableSeats--;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "Flight " + flightNumber + " from " + origin + " to " + destination + " | Seats: " + availableSeats;
+    }
+}
+
+class Reservation {
+    String passengerName;
+    Flight flight;
+
+    public Reservation(String passengerName, Flight flight) {
+        this.passengerName = passengerName;
+        this.flight = flight;
+    }
+
+    @Override
+    public String toString() {
+        return "Reservation for " + passengerName + " on " + flight;
+    }
+}
+
+public class AirlineReservationSystemGUI extends JFrame {
+    private ArrayList<Flight> flights = new ArrayList<>();
+    private ArrayList<Reservation> reservations = new ArrayList<>();
+
+    private JTextField originField, destinationField, flightNumberField, passengerNameField;
+    private JTextArea outputArea;
+
+    public AirlineReservationSystemGUI() {
+        // Initialize sample flights
+        addFlight("AI101", "New York", "London", 5);
+        addFlight("AI102", "Paris", "Tokyo", 2);
+        addFlight("AI103", "Mumbai", "Dubai", 10);
+
+        // Set up the GUI
+        setTitle("Airline Reservation System");
+        setSize(600, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
+
+        // Top Panel for Search Flights
+        JPanel searchPanel = new JPanel(new GridLayout(2, 3, 10, 10));
+        searchPanel.setBorder(BorderFactory.createTitledBorder("Search Flights"));
+        searchPanel.add(new JLabel("Origin:"));
+        originField = new JTextField();
+        searchPanel.add(originField);
+        searchPanel.add(new JLabel("Destination:"));
+        destinationField = new JTextField();
+        searchPanel.add(destinationField);
+        JButton searchButton = new JButton("Search");
+        searchButton.addActionListener(e -> searchFlights());
+        searchPanel.add(searchButton);
+        add(searchPanel, BorderLayout.NORTH);
+
+        // Center Panel for Output
+        JPanel outputPanel = new JPanel(new BorderLayout());
+        outputPanel.setBorder(BorderFactory.createTitledBorder("Output"));
+        outputArea = new JTextArea();
+        outputArea.setEditable(false);
+        outputPanel.add(new JScrollPane(outputArea), BorderLayout.CENTER);
+        add(outputPanel, BorderLayout.CENTER);
+
+        // Bottom Panel for Booking and Viewing Reservations
+        JPanel bookingPanel = new JPanel(new GridLayout(3, 2, 10, 10));
+        bookingPanel.setBorder(BorderFactory.createTitledBorder("Booking"));
+        bookingPanel.add(new JLabel("Flight Number:"));
+        flightNumberField = new JTextField();
+        bookingPanel.add(flightNumberField);
+        bookingPanel.add(new JLabel("Passenger Name:"));
+        passengerNameField = new JTextField();
+        bookingPanel.add(passengerNameField);
+
+        JButton bookButton = new JButton("Book Flight");
+        bookButton.addActionListener(e -> bookFlight());
+        bookingPanel.add(bookButton);
+
+        JButton viewReservationsButton = new JButton("View Reservations");
+        viewReservationsButton.addActionListener(e -> viewReservations());
+        bookingPanel.add(viewReservationsButton);
+
+        add(bookingPanel, BorderLayout.SOUTH);
+
+        setVisible(true);
+    }
+
+    // Add a flight to the list
+    public void addFlight(String flightNumber, String origin, String destination, int availableSeats) {
+        flights.add(new Flight(flightNumber, origin, destination, availableSeats));
+    }
+
+    // Search for flights based on origin and destination
+    public void searchFlights() {
+        String origin = originField.getText().trim();
+        String destination = destinationField.getText().trim();
+
+        outputArea.setText("");
+        boolean found = false;
+        for (Flight flight : flights) {
+            if (flight.origin.equalsIgnoreCase(origin) && flight.destination.equalsIgnoreCase(destination)) {
+                outputArea.append(flight + "\n");
+                found = true;
+            }
+        }
+        if (!found) {
+            outputArea.append("No flights found for the selected route.\n");
+        }
+    }
+
+    // Book a flight based on flight number and passenger name
+    public void bookFlight() {
+        String flightNumber = flightNumberField.getText().trim();
+        String passengerName = passengerNameField.getText().trim();
+
+        if (flightNumber.isEmpty() || passengerName.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter both Flight Number and Passenger Name.");
+            return;
+        }
+
+        for (Flight flight : flights) {
+            if (flight.flightNumber.equalsIgnoreCase(flightNumber)) {
+                if (flight.bookSeat()) {
+                    reservations.add(new Reservation(passengerName, flight));
+                    JOptionPane.showMessageDialog(this, "Booking successful for " + passengerName);
+                } else {
+                    JOptionPane.showMessageDialog(this, "No available seats on flight " + flightNumber);
+                }
+                return;
+            }
+        }
+        JOptionPane.showMessageDialog(this, "Flight " + flightNumber + " not found.");
+    }
+
+    // View all reservations
+    public void viewReservations() {
+        outputArea.setText("");
+        if (reservations.isEmpty()) {
+            outputArea.append("No reservations found.\n");
+        } else {
+            for (Reservation reservation : reservations) {
+                outputArea.append(reservation + "\n");
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        new AirlineReservationSystemGUI();
+    }
+}
